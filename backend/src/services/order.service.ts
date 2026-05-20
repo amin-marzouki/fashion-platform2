@@ -2,76 +2,94 @@ import { Request, Response } from 'express'
 import prisma from '../config/db'
 
 export const createOrder = async (req: Request, res: Response) => {
-  const userId = (req as any).userId
+  const userIdParsed = parseInt(String((req as any).userId), 10)
+  if (isNaN(userIdParsed)) {
+    return res.status(401).json({ error: 'Invalid user session' })
+  }
+
   const { items, referrer_id } = req.body
-  if (!items || !Array.isArray(items) || items.length === 0)
+  if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'items array required' })
+  }
 
-  const outfitIds = items.map((i: any) => i.outfit_id)
-  const outfits = await prisma.outfit.findMany({ where: { id: { in: outfitIds } } })
+  const productIds = items.map((i: any) => parseInt(String(i.outfit_id || i.product_id), 10)).filter(id => !isNaN(id))
+  if (productIds.length !== items.length) {
+    return res.status(400).json({ error: 'All items must have valid outfit_id/product_id' })
+  }
 
-  if (outfits.length !== outfitIds.length)
-    return res.status(404).json({ error: 'One or more outfits not found' })
+  const products = await prisma.product.findMany({ where: { id: { in: productIds } } })
+
+  if (products.length !== productIds.length) {
+    return res.status(404).json({ error: 'One or more products not found' })
+  }
 
   let total_amount = 0
   const orderItems = items.map((item: any) => {
-    const outfit = outfits.find(o => o.id === item.outfit_id)!
-    total_amount += outfit.price * item.quantity
-    return { outfit_id: item.outfit_id, quantity: item.quantity, price: outfit.price }
+    const productIdx = parseInt(String(item.outfit_id || item.product_id), 10)
+    const product = products.find(p => p.id === productIdx)!
+    total_amount += product.price * item.quantity
+    return {
+      product_id: productIdx,
+      quantity: item.quantity,
+      unit_price: product.price,
+      size: item.size || 'M'
+    }
   })
+
+  const referrerIdParsed = referrer_id ? parseInt(String(referrer_id), 10) : null
 
   const order = await prisma.order.create({
     data: {
-      user_id: userId,
-      referrer_id: referrer_id ?? null,
+      user_id: userIdParsed,
+      referred_by: referrerIdParsed && !isNaN(referrerIdParsed) ? referrerIdParsed : null,
       total_amount,
-      items: { create: orderItems },
-      status: 'CONFIRMED',
+      status: 'paid',
+      items: { create: orderItems }
     },
     include: { items: true }
   })
 
-  // Credit commission to referrer
-  if (referrer_id && referrer_id !== userId) {
-    const commission = total_amount * order.commission_rate
-    await prisma.user.update({
-      where: { id: referrer_id },
-      data: { wallet_balance: { increment: commission } }
-    })
+  // Credit 10% commission to referrer
+  if (referrerIdParsed && !isNaN(referrerIdParsed) && referrerIdParsed !== userIdParsed) {
+    const referrer = await prisma.user.findUnique({ where: { id: referrerIdParsed } })
+    if (referrer) {
+      const commissionAmount = total_amount * 0.10
+      await prisma.user.update({
+        where: { id: referrerIdParsed },
+        data: {
+          wallet_balance: { increment: commissionAmount },
+          total_commission: { increment: commissionAmount }
+        }
+      })
 
-    const buyer = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { display_name: true }
-    })
-
-    // Create COMMISSION transaction for referrer
-    await prisma.transaction.create({
-      data: {
-        user_id: referrer_id,
-        type: 'COMMISSION',
-        amount: commission,
-        description: `10% Affiliate Commission on purchase by ${buyer?.display_name || 'Customer'}`,
-        status: 'COMPLETED'
-      }
-    })
+      // Create Commission record
+      await prisma.commission.create({
+        data: {
+          referrer_id: referrerIdParsed,
+          order_id: order.id,
+          amount: commissionAmount,
+          status: 'paid'
+        }
+      })
+    }
   }
 
-  // Create PURCHASE transaction for buyer
-  await prisma.transaction.create({
+  // Update user stats
+  await prisma.user.update({
+    where: { id: userIdParsed },
     data: {
-      user_id: userId,
-      type: 'PURCHASE',
-      amount: total_amount,
-      description: `Purchased outfit(s): ${outfits.map(o => o.name).join(', ')}`,
-      status: 'COMPLETED'
+      total_orders: { increment: 1 },
+      days_since_last_order: 0,
+      last_category: products[0]?.category || null,
+      last_product_type: products[0]?.product_type || null
     }
   })
 
   // Auto-add purchased outfits to buyer's wardrobe
   for (const item of orderItems) {
-    await prisma.wardrobeItem.upsert({
-      where: { user_id_outfit_id: { user_id: userId, outfit_id: item.outfit_id } },
-      create: { user_id: userId, outfit_id: item.outfit_id },
+    await prisma.wardrobe.upsert({
+      where: { user_id_product_id: { user_id: userIdParsed, product_id: item.product_id } },
+      create: { user_id: userIdParsed, product_id: item.product_id },
       update: {}
     })
   }
@@ -80,19 +98,32 @@ export const createOrder = async (req: Request, res: Response) => {
 }
 
 export const listOrders = async (req: Request, res: Response) => {
+  const userIdParsed = parseInt(String((req as any).userId), 10)
+  if (isNaN(userIdParsed)) {
+    return res.status(401).json({ error: 'Invalid user session' })
+  }
+
   const orders = await prisma.order.findMany({
-    where: { user_id: (req as any).userId },
-    include: { items: { include: { outfit: { select: { id: true, name: true, price: true } } } } },
-    orderBy: { created_at: 'desc' }
+    where: { user_id: userIdParsed },
+    include: { items: { include: { product: { select: { id: true, name: true, price: true, image_url: true } } } } },
+    orderBy: { id: 'desc' }
   })
   return res.json(orders)
 }
 
 export const getOrder = async (req: Request, res: Response) => {
+  const userIdParsed = parseInt(String((req as any).userId), 10)
+  const orderIdParsed = parseInt(req.params.id, 10)
+  if (isNaN(userIdParsed) || isNaN(orderIdParsed)) {
+    return res.status(400).json({ error: 'Invalid request parameters' })
+  }
+
   const order = await prisma.order.findFirst({
-    where: { id: req.params.id, user_id: (req as any).userId },
-    include: { items: { include: { outfit: true } } }
+    where: { id: orderIdParsed, user_id: userIdParsed },
+    include: { items: { include: { product: true } } }
   })
-  if (!order) return res.status(404).json({ error: 'Order not found' })
+  if (!order) {
+    return res.status(404).json({ error: 'Order not found' })
+  }
   return res.json(order)
 }

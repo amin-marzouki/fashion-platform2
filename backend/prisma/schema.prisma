@@ -1,61 +1,80 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider   = "mysql"
-  url        = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 model User {
-  id              String   @id @default(uuid())
-  email           String   @unique
-  password_hash   String
-  display_name    String
-  role            Role     @default(USER)
-  wallet_balance  Float    @default(0)
-  isModel         Boolean  @default(false)
-  photo           String?
-  bodyDescription String?  @db.Text
-  clothesTaste    String?  @db.Text
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id                    Int      @id @default(autoincrement())
+  name                  String
+  email                 String   @unique
+  password              String   // Stores password hash
+  role                  Role     @default(USER)
+  gender                Gender   @default(Other)
+  height                Float?
+  weight                Float?
+  shoulder              Float?
+  chest                 Float?
+  waist                 Float?
+  hips                  Float?
+  total_orders          Int      @default(0)
+  last_category         String?
+  last_product_type     String?
+  days_since_last_order Int?
+  referral_code         String   @unique
+  total_commission      Float    @default(0.0)
 
-  avatar         Avatar?
-  orders         Order[]
-  wardrobe_items WardrobeItem[]
-  referrals      Order[]  @relation("Referrer")
-  transactions   Transaction[]
+  // Custom fields we retain to prevent model wardrobe profiles and request 3 from breaking
+  isModel               Boolean  @default(false)
+  photo                 String?
+  bodyDescription       String?  @db.Text
+  clothesTaste          String?  @db.Text
+  wallet_balance        Float    @default(0.0) // Kept for balance flow
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  avatar                Avatar?
+  orders                Order[]
+  wardrobe_items        Wardrobe[]
+  commissions           Commission[]  @relation("ReferrerCommissions")
 
   @@map("users")
 }
 
 enum Role {
-  GUEST
   USER
   ADMIN
+}
+
+enum Gender {
+  M
+  F
+  Other
 }
 
 // ─── Avatars ─────────────────────────────────────────────────────────────────
 
 model Avatar {
-  id               String        @id @default(uuid())
-  user_id          String        @unique
-  metahuman_id     String        // "BP_Avatar_01" ... "BP_Avatar_05"
-  status           AvatarStatus  @default(PENDING)
-  photos_urls      Json?         // 6 S3 URLs stored as JSON array
+  id               Int          @id @default(autoincrement())
+  user_id          Int          @unique
+  metahuman_id     String       // "BP_Avatar_01" ... "BP_Avatar_05"
+  status           AvatarStatus @default(PENDING)
+  photos_urls      Json?        // 6 S3 URLs stored as JSON array
   body_height      Float?
   body_weight      Float?
   body_chest       Float?
   body_waist       Float?
   body_hips        Float?
   estimated_ready  DateTime?
-  created_at       DateTime      @default(now())
-  updated_at       DateTime      @updatedAt
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
 
-  user             User          @relation(fields: [user_id], references: [id])
+  user             User         @relation(fields: [user_id], references: [id])
 
   @@map("avatars")
 }
@@ -77,117 +96,112 @@ model Market {
   description String
   created_at  DateTime  @default(now())
 
-  outfits     Outfit[]
+  products    Product[]
 
   @@map("markets")
 }
 
-// ─── Outfits ─────────────────────────────────────────────────────────────────
+// ─── Products ─────────────────────────────────────────────────────────────────
 
-model Outfit {
-  id             String    @id @default(uuid())
-  market_id      String
+model Product {
+  id             Int      @id @default(autoincrement())
   name           String
-  description    String
+  brand          String
+  category       String
+  product_type   String
+  description    String   @db.Text
   price          Float
-  currency       String    @default("USD")
-  images         Json?     // 2D image URLs stored as JSON array
-  has_3d_model   Boolean   @default(false)
-  skm_asset_key  String?   // e.g. "outfit_zara_tshirt_01" — sent to UE
-  tags           Json?     // ["formal","wedding","fancy"] stored as JSON array
-  occasion       String?   // "wedding", "casual", "sport"
-  style_type     String?   // "classic", "streetwear", "luxury"
-  in_stock       Boolean   @default(true)
-  created_at     DateTime  @default(now())
+  image_url      String
+  model_3d_url   String?  // Holds the UE skeletal mesh asset key (e.g. "outfit_zara_white_tee")
+  size_chest_min Float?
+  size_chest_max Float?
+  size_waist_min Float?
+  size_waist_max Float?
+  size_hip_min   Float?
+  size_hip_max   Float?
+  stock          Int      @default(10)
 
-  market         Market    @relation(fields: [market_id], references: [id])
-  wardrobe_items WardrobeItem[]
+  // Keep optional relation to Market for brand catalogs
+  market_id      String?
+  market         Market?   @relation(fields: [market_id], references: [id])
+
+  wardrobe_items Wardrobe[]
   order_items    OrderItem[]
 
-  @@map("outfits")
+  @@map("products")
 }
 
 // ─── Wardrobe ─────────────────────────────────────────────────────────────────
 
-model WardrobeItem {
-  id         String   @id @default(uuid())
-  user_id    String
-  outfit_id  String
-  is_public  Boolean  @default(true)
+model Wardrobe {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  product_id Int
   added_at   DateTime @default(now())
 
   user       User     @relation(fields: [user_id], references: [id])
-  outfit     Outfit   @relation(fields: [outfit_id], references: [id])
+  product    Product  @relation(fields: [product_id], references: [id])
 
-  @@unique([user_id, outfit_id])
-  @@map("wardrobe_items")
+  @@unique([user_id, product_id])
+  @@map("wardrobe")
 }
 
 // ─── Orders ──────────────────────────────────────────────────────────────────
 
 model Order {
-  id              String      @id @default(uuid())
-  user_id         String
-  referrer_id     String?     // wardrobe owner who gets commission
-  status          OrderStatus @default(PENDING)
-  total_amount    Float
-  commission_rate Float       @default(0.1)  // 10% to referrer
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
+  id           Int         @id @default(autoincrement())
+  user_id      Int
+  total_amount Float
+  status       OrderStatus @default(pending)
+  referred_by  Int?        // Referrer user ID
+  created_at   DateTime    @default(now())
 
-  user            User        @relation(fields: [user_id], references: [id])
-  referrer        User?       @relation("Referrer", fields: [referrer_id], references: [id])
-  items           OrderItem[]
+  user         User        @relation(fields: [user_id], references: [id])
+  items        OrderItem[]
+  commissions  Commission[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id        String  @id @default(uuid())
-  order_id  String
-  outfit_id String
-  quantity  Int     @default(1)
-  price     Float
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  quantity   Int      @default(1)
+  unit_price Float
+  size       String   @default("M")
 
-  order     Order   @relation(fields: [order_id], references: [id])
-  outfit    Outfit  @relation(fields: [outfit_id], references: [id])
+  order      Order    @relation(fields: [order_id], references: [id])
+  product    Product  @relation(fields: [product_id], references: [id])
 
   @@map("order_items")
 }
 
 enum OrderStatus {
-  PENDING
-  CONFIRMED
-  SHIPPED
-  DELIVERED
-  CANCELLED
+  pending
+  paid
+  shipped
+  delivered
+  returned
 }
 
-// ─── Transactions ─────────────────────────────────────────────────────────────
+// ─── Commissions ─────────────────────────────────────────────────────────────
 
-model Transaction {
-  id          String            @id @default(uuid())
-  user_id     String
-  type        TransactionType
+model Commission {
+  id          Int              @id @default(autoincrement())
+  referrer_id Int
+  order_id    Int
   amount      Float
-  currency    String            @default("USD")
-  description String
-  status      TransactionStatus @default(COMPLETED)
-  created_at  DateTime          @default(now())
+  status      CommissionStatus @default(pending)
+  created_at  DateTime         @default(now())
 
-  user        User              @relation(fields: [user_id], references: [id])
+  referrer    User             @relation("ReferrerCommissions", fields: [referrer_id], references: [id])
+  order       Order            @relation(fields: [order_id], references: [id])
 
-  @@map("transactions")
+  @@map("commissions")
 }
 
-enum TransactionType {
-  COMMISSION
-  PAYOUT
-  PURCHASE
-}
-
-enum TransactionStatus {
-  PENDING
-  COMPLETED
-  FAILED
+enum CommissionStatus {
+  pending
+  paid
 }

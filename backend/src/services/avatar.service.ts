@@ -4,19 +4,23 @@ import { avatarQueue } from '../workers/avatarWorker'
 import { uploadToS3 } from '../middleware/upload'
 
 export const createAvatar = async (req: Request, res: Response) => {
-  const userId = (req as any).userId
+  const userIdParsed = parseInt(String((req as any).userId), 10)
+  if (isNaN(userIdParsed)) {
+    return res.status(401).json({ error: 'Invalid user session' })
+  }
+
   const { body_height, body_weight, body_chest, body_waist, body_hips } = req.body
   const files = req.files as Express.Multer.File[]
 
   if (!files || files.length !== 6)
     return res.status(400).json({ error: 'Exactly 6 face photos required' })
 
-  const photos_urls = await Promise.all(files.map(f => uploadToS3(f, `avatars/${userId}`)))
+  const photos_urls = await Promise.all(files.map(f => uploadToS3(f, `avatars/${userIdParsed}`)))
 
   const avatar = await prisma.avatar.upsert({
-    where: { user_id: userId },
+    where: { user_id: userIdParsed },
     create: {
-      user_id: userId,
+      user_id: userIdParsed,
       metahuman_id: '',
       status: 'PENDING',
       photos_urls,
@@ -50,13 +54,23 @@ export const createAvatar = async (req: Request, res: Response) => {
 }
 
 export const getMyAvatar = async (req: Request, res: Response) => {
-  const avatar = await prisma.avatar.findUnique({ where: { user_id: (req as any).userId } })
+  const userIdParsed = parseInt(String((req as any).userId), 10)
+  if (isNaN(userIdParsed)) {
+    return res.status(401).json({ error: 'Invalid user session' })
+  }
+
+  const avatar = await prisma.avatar.findUnique({ where: { user_id: userIdParsed } })
   return res.json(avatar ?? { status: 'NONE' })
 }
 
 export const getAvatarById = async (req: Request, res: Response) => {
+  const avatarIdParsed = parseInt(req.params.id, 10)
+  if (isNaN(avatarIdParsed)) {
+    return res.status(400).json({ error: 'Invalid avatar ID' })
+  }
+
   const avatar = await prisma.avatar.findUnique({
-    where: { id: req.params.id },
+    where: { id: avatarIdParsed },
     select: { id: true, metahuman_id: true, status: true, body_height: true, body_weight: true, created_at: true }
   })
   if (!avatar) return res.status(404).json({ error: 'Not found' })

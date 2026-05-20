@@ -49,74 +49,74 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4 page-enter">
-      <div className="glass w-full max-w-md p-8 rounded-3xl space-y-6 shadow-2xl border-white/5 glow-brand">
-        <div className="text-center space-y-2">
-          <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center mx-auto">
-            <Sparkles className="w-5 h-5 text-white" />
+    <div className="min-h-[80vh] flex items-center justify-center p-4 page-enter bg-[#f8f7f5]">
+      <div className="bg-white w-full max-w-md p-10 space-y-8 border border-black/10 shadow-sm">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 bg-black flex items-center justify-center mx-auto">
+            <Sparkles className="w-6 h-6 text-white stroke-[1.5]" />
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Welcome Back</h1>
-          <p className="text-sm text-white/40">Sign in to manage your wardrobe and personal 3D avatar</p>
+          <h1 className="text-2xl font-serif font-bold text-black uppercase tracking-widest mt-4">Welcome Back</h1>
+          <p className="text-xs text-black/60 tracking-wide uppercase">Sign in to manage your wardrobe</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold text-white/50">Email Address</label>
+        <form onSubmit={handleSubmit} className="space-y-5 pt-4">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-bold text-black uppercase tracking-widest">Email Address</label>
             <input
               id="login-email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="e.g. ali@demo.com"
-              className="input-field"
+              className="input-field bg-[#f4f4f2] border-black/10 focus:border-black"
               required
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="block text-xs font-semibold text-white/50">Password</label>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-bold text-black uppercase tracking-widest">Password</label>
             <input
               id="login-password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="input-field"
+              className="input-field bg-[#f4f4f2] border-black/10 focus:border-black"
               required
             />
           </div>
 
-          {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+          {error && <p className="text-red-500 text-xs font-semibold uppercase tracking-widest text-center pt-2">{error}</p>}
 
           <button
             id="login-submit"
             type="submit"
             disabled={loading}
-            className="btn-primary w-full flex items-center justify-center gap-2 py-3"
+            className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-xs font-bold uppercase tracking-widest mt-6"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In'}
           </button>
         </form>
 
         {/* Quick Test Login Bypass for Models */}
-        <div className="border-t border-white/10 pt-4 space-y-3">
+        <div className="border-t border-black/10 pt-6 space-y-4">
           <div className="text-center">
-            <span className="text-[9px] font-black uppercase tracking-widest text-brand-400 block">
-              ⚡ Test Model Bypass Shortcuts
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/40 block">
+              Test Model Bypass Shortcuts
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             {[
-              { name: 'Ali (Model)', email: 'ali@demo.com' },
-              { name: 'Sara (Model)', email: 'sara@demo.com' },
-              { name: 'Lina (Model)', email: 'lina@demo.com' },
+              { name: 'Ali', email: 'ali@demo.com' },
+              { name: 'Sara', email: 'sara@demo.com' },
+              { name: 'Lina', email: 'lina@demo.com' },
             ].map(m => (
               <button
                 key={m.email}
                 type="button"
                 onClick={() => handleBypassLogin(m.email)}
                 disabled={loading}
-                className="glass glass-hover py-2.5 rounded-xl text-[10px] font-bold text-white/80 hover:text-white text-center truncate"
+                className="bg-[#f8f7f5] border border-black/5 hover:border-black/30 py-3 text-[10px] font-bold uppercase tracking-widest text-black/70 hover:text-black text-center transition-colors"
               >
                 {m.name}
               </button>
@@ -124,11 +124,11 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="text-center text-xs text-white/30 space-y-1">
+        <div className="text-center text-[10px] text-black/40 space-y-2 uppercase tracking-widest pt-4">
           <p>
-            Don't have an account? <Link href="/register" className="text-brand-400 hover:underline">Register now</Link>
+            Don't have an account? <Link href="/register" className="text-black font-bold hover:underline">Register now</Link>
           </p>
-          <p className="text-[10px] text-white/20">Demo account: ali@demo.com • Password: demo1234</p>
+          <p className="text-black/30">Demo account: ali@demo.com • Password: demo1234</p>
         </div>
       </div>
     </div>

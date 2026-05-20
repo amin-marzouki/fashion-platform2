@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 import SmartSearchBar from '@/components/SmartSearchBar'
 import Link from 'next/link'
-import { Sparkles, ShoppingBag, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight } from 'lucide-react'
 
 interface Market {
   id: string
@@ -27,78 +27,80 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 space-y-16 page-enter">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 space-y-24 page-enter bg-[#f8f7f5]">
       {/* Hero section */}
-      <section className="relative text-center py-20 bg-hero-glow rounded-3xl overflow-hidden border border-white/5 glow-brand">
-        <div className="max-w-3xl mx-auto space-y-6 px-6">
-          <div className="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-400/20 px-4 py-1.5 rounded-full">
-            <Sparkles className="w-4 h-4 text-brand-400 animate-pulse" />
-            <span className="text-sm font-semibold text-brand-300">Powered by Unreal Engine 5 & AI</span>
+      <section className="relative text-center py-24 bg-white border border-black/10">
+        <div className="max-w-3xl mx-auto space-y-8 px-6">
+          <div className="inline-flex items-center gap-2 border border-black/10 px-4 py-1.5 uppercase tracking-widest">
+            <Sparkles className="w-3 h-3 text-black" />
+            <span className="text-xs font-semibold text-black">Powered by Unreal Engine 5 & AI</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white leading-tight">
-            Step into the <span className="text-brand-400">Metaverse</span> of Fashion
+          <h1 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-black uppercase">
+            Step into the Metaverse of Fashion
           </h1>
-          <p className="text-white/60 text-lg md:text-xl">
+          <p className="text-black/60 text-base md:text-lg max-w-xl mx-auto tracking-wide">
             Try on outfits instantly with your personal high-fidelity MetaHuman avatar streamed in real-time.
           </p>
 
-          <div className="pt-4 max-w-xl mx-auto">
+          <div className="pt-6 max-w-xl mx-auto">
             <SmartSearchBar autoNavigate={true} />
           </div>
         </div>
       </section>
 
       {/* Featured markets */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between">
+      <section className="space-y-10">
+        <div className="flex items-end justify-between border-b border-black/10 pb-4">
           <div>
-            <h2 className="text-2xl font-bold text-white">Explore Top Brands</h2>
-            <p className="text-sm text-white/40">Shop from the world's leading fashion brands</p>
+            <h2 className="text-2xl font-serif font-bold text-black uppercase tracking-widest">Explore Top Brands</h2>
           </div>
-          <Link href="/markets" className="btn-ghost flex items-center gap-2 text-sm py-2 px-4">
-            See All <ArrowRight className="w-4 h-4" />
+          <Link href="/markets" className="flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-black hover:text-black/60 transition-colors">
+            Shop All <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[1, 2, 3].map(i => (
-              <div key={i} className="glass h-64 animate-pulse rounded-2xl" />
+              <div key={i} className="bg-white border border-black/5 h-[28rem] animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {markets.slice(0, 3).map(m => (
               <Link
                 key={m.id}
                 href={`/markets/${m.id}`}
-                className="glass glass-hover group overflow-hidden relative flex flex-col h-64 animate-fade-in"
+                className="group relative flex flex-col h-[28rem] animate-fade-in bg-[#f4f4f2] overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent z-10" />
-                <div className="absolute inset-0 bg-surface-700">
+                {/* Banner Image */}
+                <div className="absolute inset-0">
                   {m.banner_url && (
                     <img
                       src={m.banner_url}
                       alt={m.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 opacity-90"
                     />
                   )}
                 </div>
+                
+                {/* Overlay for readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10" />
 
-                <div className="mt-auto p-6 relative z-20 space-y-2">
-                  <div className="flex items-center gap-3">
+                <div className="mt-auto p-6 relative z-20 space-y-3 bg-white/95 backdrop-blur-sm border-t border-black/10 m-4 shadow-sm group-hover:bg-white transition-colors duration-300">
+                  <div className="flex items-center gap-4 border-b border-black/5 pb-3">
                     {m.logo_url && (
-                      <div className="w-10 h-10 rounded-xl bg-white p-1.5 flex items-center justify-center shrink-0">
-                        <img src={m.logo_url} alt={m.name} className="object-contain max-h-full max-w-full" />
+                      <div className="w-10 h-10 bg-white border border-black/10 flex items-center justify-center shrink-0">
+                        <img src={m.logo_url} alt={m.name} className="object-contain max-h-8 max-w-[2rem]" />
                       </div>
                     )}
-                    <h3 className="text-xl font-bold text-white">{m.name}</h3>
+                    <h3 className="text-lg font-serif font-bold text-black uppercase tracking-widest">{m.name}</h3>
                   </div>
-                  <p className="text-white/60 text-sm line-clamp-2">{m.description}</p>
-                  <div className="flex items-center justify-between text-xs text-brand-300 font-semibold pt-1">
-                    <span>{m._count?.outfits || 0} Outfits available</span>
-                    <span className="group-hover:translate-x-1 transition-transform duration-200 flex items-center gap-1">
-                      Shop Brand <ArrowRight className="w-3.5 h-3.5" />
+                  <p className="text-black/70 text-sm line-clamp-2 tracking-wide leading-relaxed">{m.description}</p>
+                  <div className="flex items-center justify-between text-xs text-black font-semibold pt-2 uppercase tracking-widest">
+                    <span>{m._count?.outfits || 0} Items</span>
+                    <span className="flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300">
+                      View Collection <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>
                 </div>

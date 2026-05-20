@@ -1,41 +1,41 @@
 import { Request, Response } from 'express'
 import prisma from '../config/db'
+import { mapProductToOutfit } from '../utils/mapper'
 
 export const listMarkets = async (_req: Request, res: Response) => {
   const markets = await prisma.market.findMany({
-    include: { _count: { select: { outfits: true } } }
+    include: { _count: { select: { products: true } } }
   })
   return res.json(markets)
 }
 
 export const getMarketOutfits = async (req: Request, res: Response) => {
-  const outfits = await prisma.outfit.findMany({
-    where: { market_id: req.params.id, in_stock: true },
-    select: {
-      id: true, name: true, price: true, currency: true,
-      images: true, has_3d_model: true, tags: true,
-      occasion: true, style_type: true
-    }
+  const products = await prisma.product.findMany({
+    where: { market_id: req.params.id, stock: { gt: 0 } }
   })
+  const outfits = products.map(mapProductToOutfit)
   return res.json(outfits)
 }
 
 export const getOutfit = async (req: Request, res: Response) => {
-  const outfit = await prisma.outfit.findUnique({ where: { id: req.params.id } })
-  if (!outfit) return res.status(404).json({ error: 'Not found' })
-  return res.json(outfit)
+  const productIdx = parseInt(req.params.id, 10)
+  if (isNaN(productIdx)) return res.status(400).json({ error: 'Invalid product ID' })
+
+  const product = await prisma.product.findUnique({ where: { id: productIdx } })
+  if (!product) return res.status(404).json({ error: 'Not found' })
+  return res.json(mapProductToOutfit(product))
 }
 
 export const listOutfits = async (req: Request, res: Response) => {
-  const { occasion, style_type, in_stock } = req.query
-  const outfits = await prisma.outfit.findMany({
+  const { category, product_type } = req.query
+  const products = await prisma.product.findMany({
     where: {
-      ...(occasion ? { occasion: String(occasion) } : {}),
-      ...(style_type ? { style_type: String(style_type) } : {}),
-      ...(in_stock !== undefined ? { in_stock: in_stock === 'true' } : { in_stock: true }),
+      ...(category ? { category: String(category) } : {}),
+      ...(product_type ? { product_type: String(product_type) } : {}),
     },
     include: { market: { select: { id: true, name: true } } }
   })
+  const outfits = products.map(mapProductToOutfit)
   return res.json(outfits)
 }
 
@@ -44,7 +44,7 @@ export const listModels = async (_req: Request, res: Response) => {
     where: { isModel: true },
     select: {
       id: true,
-      display_name: true,
+      name: true,
       photo: true,
       bodyDescription: true,
       clothesTaste: true

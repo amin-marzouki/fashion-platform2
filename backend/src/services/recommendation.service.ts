@@ -1,6 +1,6 @@
 import prisma from '../config/db'
 
-export const getRecommendations = async (userId: string) => {
+export const getRecommendations = async (userId: number) => {
   const avatar = await prisma.avatar.findUnique({ where: { user_id: userId } })
   const body_params = {
     height: avatar?.body_height,
@@ -20,15 +20,16 @@ export const getRecommendations = async (userId: string) => {
     if (!res.ok) throw new Error('Recommendation service error')
 
     const data: any = await res.json()
-    const recommended_outfit_ids: string[] = data.recommended_outfit_ids ?? []
+    const recommended_outfit_ids: any[] = data.recommended_outfit_ids ?? []
+    const productIds = recommended_outfit_ids.map(id => parseInt(String(id), 10)).filter(id => !isNaN(id))
 
-    if (recommended_outfit_ids.length === 0) return []
+    if (productIds.length === 0) return []
 
-    const outfits = await prisma.outfit.findMany({
-      where: { id: { in: recommended_outfit_ids } }
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } }
     })
 
-    return outfits
+    return products
   } catch (err) {
     console.warn('Recommendation service unavailable, returning empty:', err)
     return []

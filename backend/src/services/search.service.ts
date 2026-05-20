@@ -26,37 +26,44 @@ export const smartSearch = async (req: Request, res: Response) => {
     console.warn('Claude intent parse failed:', err)
   }
 
-  // Step 2: DB search — tag/occasion filter
-  const allOutfits = await prisma.outfit.findMany({
-    where: { in_stock: true },
+  // Step 2: DB search — Product model
+  const allProducts = await prisma.product.findMany({
+    where: { stock: { gt: 0 } },
     select: {
-      id: true, name: true, price: true, currency: true, images: true,
-      has_3d_model: true, tags: true, occasion: true, style_type: true, description: true
+      id: true, name: true, price: true, description: true,
+      image_url: true, model_3d_url: true, brand: true, category: true, product_type: true
     }
   })
 
   // Step 3: Score and rank by intent match
-  const scored = allOutfits
-    .map(o => {
+  const scored = allProducts
+    .map(p => {
       let score = 0
-      if (intent.occasion && o.occasion === intent.occasion) score += 3
-      if (intent.style_type && o.style_type === intent.style_type) score += 2
-      const tags = (o.tags as string[]) || []
-      const matchedKeywords = (intent.keywords || []).filter((kw: string) =>
-        tags.some(t => t.toLowerCase().includes(kw.toLowerCase())) ||
-        o.name.toLowerCase().includes(kw.toLowerCase())
+      
+      // Keywords/Occasion/Style matching against category, brand, and type
+      const keywords = intent.keywords || []
+      const matchedKeywords = keywords.filter((kw: string) =>
+        p.name.toLowerCase().includes(kw.toLowerCase()) ||
+        p.brand.toLowerCase().includes(kw.toLowerCase()) ||
+        p.category.toLowerCase().includes(kw.toLowerCase()) ||
+        p.product_type.toLowerCase().includes(kw.toLowerCase()) ||
+        p.description.toLowerCase().includes(kw.toLowerCase())
       )
-      score += matchedKeywords.length
-      // Text fallback: query words in name
+      score += matchedKeywords.length * 2
+
+      // Text fallback: query words in name/brand/category
       const queryWords = query.toLowerCase().split(/\s+/)
       queryWords.forEach((w: string) => {
-        if (o.name.toLowerCase().includes(w)) score += 0.5
+        if (p.name.toLowerCase().includes(w)) score += 1.0
+        if (p.brand.toLowerCase().includes(w)) score += 0.8
+        if (p.category.toLowerCase().includes(w)) score += 0.5
       })
-      return { ...o, _score: score }
+
+      return { ...p, _score: score }
     })
     .sort((a, b) => b._score - a._score)
     .slice(0, 10)
-    .map(({ _score, ...o }) => o)
+    .map(({ _score, ...p }) => p)
 
   return res.json({ intent, results: scored })
 }

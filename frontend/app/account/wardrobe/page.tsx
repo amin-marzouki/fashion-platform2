@@ -86,64 +86,65 @@ export default function MyWardrobePage() {
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center space-y-4">
-        <h2 className="text-xl font-bold text-white">Please sign in to view your wardrobe</h2>
+        <h2 className="text-xl font-bold text-black uppercase tracking-widest">Please sign in to view your wardrobe</h2>
         <Link href="/login" className="btn-primary inline-flex">Sign In</Link>
       </div>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 space-y-12 page-enter">
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 space-y-16 page-enter bg-[#f8f7f5] min-h-screen">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">My Creator Dashboard</h1>
-        <p className="text-sm text-white/40 mt-1">Manage your wardrobe collection, view referrals, and track financial earnings</p>
+      <div className="border-b border-black/10 pb-6 text-center">
+        <h1 className="text-3xl font-serif font-bold text-black uppercase tracking-widest">My Creator Dashboard</h1>
+        <p className="text-sm text-black/60 mt-3 tracking-wide">Manage your wardrobe collection, view referrals, and track financial earnings.</p>
       </div>
 
       {/* Wallet / Commission metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass p-6 flex items-center justify-between border-white/5 bg-gradient-to-r from-brand-500/10 to-transparent">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">Wallet Balance</p>
-            <p className="text-2xl font-black text-white">${(user.wallet_balance ?? 0).toFixed(2)}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="bg-white p-8 flex items-center justify-between border border-black/10 shadow-sm">
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-black uppercase tracking-[0.2em]">Wallet Balance</p>
+            <p className="text-3xl font-serif font-black text-black tracking-widest">${(user.wallet_balance ?? 0).toFixed(2)}</p>
           </div>
-          <div className="p-3 bg-brand-500/20 rounded-2xl">
-            <Wallet className="w-6 h-6 text-brand-400" />
-          </div>
-        </div>
-
-        <div className="glass p-6 flex items-center justify-between border-white/5">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">Social Referrals</p>
-            <p className="text-2xl font-black text-white">10% Commission</p>
-          </div>
-          <div className="p-3 bg-brand-500/20 rounded-2xl">
-            <Coins className="w-6 h-6 text-brand-400" />
+          <div className="p-3">
+            <Wallet className="w-8 h-8 text-black stroke-[1]" />
           </div>
         </div>
 
-        <div className="glass p-6 flex flex-col justify-center gap-2 border-white/5">
-          <p className="text-xs font-semibold text-white/45 uppercase tracking-wider">Share & Earn</p>
+        <div className="bg-white p-8 flex items-center justify-between border border-black/10 shadow-sm">
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-black uppercase tracking-[0.2em]">Social Referrals</p>
+            <p className="text-3xl font-serif font-black text-black tracking-widest">10%</p>
+            <p className="text-[10px] uppercase text-black/50 tracking-widest">Commission Rate</p>
+          </div>
+          <div className="p-3">
+            <Coins className="w-8 h-8 text-black stroke-[1]" />
+          </div>
+        </div>
+
+        <div className="bg-[#f4f4f2] p-8 flex flex-col justify-center gap-4 border border-black/10">
+          <p className="text-xs font-bold text-black uppercase tracking-[0.2em]">Share & Earn</p>
           <button
             onClick={copyShareLink}
-            className="btn-primary py-2.5 px-4 text-xs flex items-center justify-center gap-2 w-full"
+            className="btn-primary py-3 px-6 text-xs flex items-center justify-center gap-3 w-full font-bold uppercase tracking-widest shadow-md"
           >
-            <Share2 className="w-4 h-4" /> {copied ? 'Copied link!' : 'Copy Referral Showcase'}
+            <Share2 className="w-4 h-4" /> {copied ? 'Copied link!' : 'Copy Referral Link'}
           </button>
         </div>
       </div>
 
       {/* Wardrobe listing */}
-      <div className="space-y-6">
-        <div className="border-b border-white/10 pb-4">
-          <h2 className="text-xl font-bold text-white">Curated Wardrobe</h2>
-          <p className="text-xs text-white/40 mt-1">Manage your purchased items, style showcases, and direct try-ons</p>
+      <div className="space-y-8">
+        <div className="border-b border-black/10 pb-4">
+          <h2 className="text-xl font-serif font-bold text-black uppercase tracking-widest">Curated Wardrobe</h2>
+          <p className="text-xs text-black/50 mt-2 uppercase tracking-wide">Manage your purchased items and try-ons</p>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="glass h-64 rounded-2xl animate-pulse" />
+              <div key={i} className="bg-white border border-black/5 h-80 animate-pulse shadow-sm" />
             ))}
           </div>
         ) : (
@@ -159,80 +160,80 @@ export default function MyWardrobePage() {
       </div>
 
       {/* Financial Ledger & Commissions Workflow Table */}
-      <div className="space-y-6">
-        <div className="border-b border-white/10 pb-4">
-          <h2 className="text-xl font-bold text-white">Financial Ledger & Commissions</h2>
-          <p className="text-xs text-white/40 mt-1">Real-time breakdown of affiliate commissions, store purchases, and payouts</p>
+      <div className="space-y-8">
+        <div className="border-b border-black/10 pb-4">
+          <h2 className="text-xl font-serif font-bold text-black uppercase tracking-widest">Financial Ledger</h2>
+          <p className="text-xs text-black/50 mt-2 uppercase tracking-wide">Real-time breakdown of affiliate commissions and purchases</p>
         </div>
 
         {txLoading ? (
-          <div className="glass p-8 rounded-2xl animate-pulse space-y-4">
-            <div className="h-6 bg-white/5 rounded w-1/3" />
-            <div className="h-24 bg-white/5 rounded" />
+          <div className="bg-white p-8 border border-black/5 animate-pulse space-y-6">
+            <div className="h-6 bg-black/5 w-1/3" />
+            <div className="h-24 bg-black/5" />
           </div>
         ) : transactions.length === 0 ? (
-          <div className="glass p-12 rounded-3xl text-center border-white/5 text-white/30 space-y-3">
-            <Coins className="w-10 h-10 mx-auto text-white/20" />
-            <p className="text-xs">No transactions recorded yet. Share your profile link to earn commissions!</p>
+          <div className="bg-white p-16 text-center border border-black/10 shadow-sm space-y-4">
+            <Coins className="w-10 h-10 mx-auto text-black/20 stroke-[1]" />
+            <p className="text-xs uppercase tracking-widest text-black/50 max-w-md mx-auto leading-relaxed">No transactions recorded yet. Share your profile link to earn commissions!</p>
           </div>
         ) : (
-          <div className="glass rounded-3xl border-white/5 overflow-hidden">
+          <div className="bg-white border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-white/10 bg-white/[0.02]">
-                    <th className="px-6 py-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Description</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-white/50 uppercase tracking-wider">Status</th>
+                  <tr className="border-b border-black/10 bg-[#f4f4f2]">
+                    <th className="px-6 py-5 text-[10px] font-bold text-black uppercase tracking-[0.2em]">Date</th>
+                    <th className="px-6 py-5 text-[10px] font-bold text-black uppercase tracking-[0.2em]">Type</th>
+                    <th className="px-6 py-5 text-[10px] font-bold text-black uppercase tracking-[0.2em]">Description</th>
+                    <th className="px-6 py-5 text-[10px] font-bold text-black uppercase tracking-[0.2em]">Amount</th>
+                    <th className="px-6 py-5 text-[10px] font-bold text-black uppercase tracking-[0.2em]">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-black/5">
                   {transactions.map(tx => {
                     const isEarning = tx.type === 'COMMISSION'
                     const isPurchase = tx.type === 'PURCHASE'
                     return (
-                      <tr key={tx.id} className="hover:bg-white/[0.01] transition-all">
+                      <tr key={tx.id} className="hover:bg-gray-50 transition-all">
                         {/* Date */}
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-white/60 font-medium">
-                          <span className="flex items-center gap-2">
-                            <Calendar className="w-3.5 h-3.5 text-white/30" />
+                        <td className="px-6 py-5 whitespace-nowrap text-xs text-black/80 font-medium tracking-wide">
+                          <span className="flex items-center gap-3">
+                            <Calendar className="w-4 h-4 text-black/30 stroke-[1.5]" />
                             {new Date(tx.created_at).toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric'
-                            })}
+                            }).toUpperCase()}
                           </span>
                         </td>
 
                         {/* Type Badge */}
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-5 whitespace-nowrap">
                           {tx.type === 'COMMISSION' && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/10 border border-green-500/20 text-green-400">
-                              <ArrowUpRight className="w-3 h-3" /> Commission
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] border border-green-600 text-green-700 bg-white">
+                              <ArrowUpRight className="w-3 h-3 stroke-[2]" /> COMMISSION
                             </span>
                           )}
                           {tx.type === 'PURCHASE' && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-white/70">
-                              <ArrowDownLeft className="w-3 h-3" /> Purchase
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] border border-black/20 text-black bg-white">
+                              <ArrowDownLeft className="w-3 h-3 stroke-[2]" /> PURCHASE
                             </span>
                           )}
                           {tx.type === 'PAYOUT' && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-500/10 border border-brand-400/20 text-brand-300">
-                              <Coins className="w-3 h-3" /> Payout
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] border border-black text-black bg-black/5">
+                              <Coins className="w-3 h-3 stroke-[2]" /> PAYOUT
                             </span>
                           )}
                         </td>
 
                         {/* Description */}
-                        <td className="px-6 py-4 text-xs text-white/80 max-w-xs md:max-w-md truncate">
+                        <td className="px-6 py-5 text-xs text-black/70 max-w-xs md:max-w-md truncate tracking-wide">
                           {tx.description}
                         </td>
 
                         {/* Amount */}
-                        <td className={`px-6 py-4 whitespace-nowrap text-xs font-black`}>
-                          <span className={isEarning ? 'text-green-400' : isPurchase ? 'text-white/60' : 'text-brand-300'}>
+                        <td className={`px-6 py-5 whitespace-nowrap text-sm font-bold tracking-widest`}>
+                          <span className={isEarning ? 'text-green-700' : isPurchase ? 'text-black' : 'text-black'}>
                             {isEarning ? '+' : ''}
                             {new Intl.NumberFormat('en-US', {
                               style: 'currency',
@@ -242,20 +243,20 @@ export default function MyWardrobePage() {
                         </td>
 
                         {/* Status Badge */}
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-5 whitespace-nowrap">
                           {tx.status === 'COMPLETED' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase bg-green-500/10 text-green-400">
-                              <CheckCircle className="w-3 h-3" /> Done
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-green-700">
+                              <CheckCircle className="w-3 h-3 stroke-[2]" /> DONE
                             </span>
                           )}
                           {tx.status === 'PENDING' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase bg-yellow-500/10 text-yellow-400">
-                              <Clock className="w-3 h-3 animate-spin" /> Pending
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-orange-600">
+                              <Clock className="w-3 h-3 animate-spin stroke-[2]" /> PENDING
                             </span>
                           )}
                           {tx.status === 'FAILED' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase bg-red-500/10 text-red-400">
-                              <AlertTriangle className="w-3 h-3" /> Failed
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-red-600">
+                              <AlertTriangle className="w-3 h-3 stroke-[2]" /> FAILED
                             </span>
                           )}
                         </td>
