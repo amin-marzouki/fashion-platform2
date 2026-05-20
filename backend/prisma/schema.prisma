@@ -1,0 +1,193 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider   = "mysql"
+  url        = env("DATABASE_URL")
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password_hash   String
+  display_name    String
+  role            Role     @default(USER)
+  wallet_balance  Float    @default(0)
+  isModel         Boolean  @default(false)
+  photo           String?
+  bodyDescription String?  @db.Text
+  clothesTaste    String?  @db.Text
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  avatar         Avatar?
+  orders         Order[]
+  wardrobe_items WardrobeItem[]
+  referrals      Order[]  @relation("Referrer")
+  transactions   Transaction[]
+
+  @@map("users")
+}
+
+enum Role {
+  GUEST
+  USER
+  ADMIN
+}
+
+// ─── Avatars ─────────────────────────────────────────────────────────────────
+
+model Avatar {
+  id               String        @id @default(uuid())
+  user_id          String        @unique
+  metahuman_id     String        // "BP_Avatar_01" ... "BP_Avatar_05"
+  status           AvatarStatus  @default(PENDING)
+  photos_urls      Json?         // 6 S3 URLs stored as JSON array
+  body_height      Float?
+  body_weight      Float?
+  body_chest       Float?
+  body_waist       Float?
+  body_hips        Float?
+  estimated_ready  DateTime?
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @updatedAt
+
+  user             User          @relation(fields: [user_id], references: [id])
+
+  @@map("avatars")
+}
+
+enum AvatarStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+// ─── Markets ─────────────────────────────────────────────────────────────────
+
+model Market {
+  id          String    @id @default(uuid())
+  name        String    // "Zara", "Gucci", etc.
+  logo_url    String
+  banner_url  String
+  description String
+  created_at  DateTime  @default(now())
+
+  outfits     Outfit[]
+
+  @@map("markets")
+}
+
+// ─── Outfits ─────────────────────────────────────────────────────────────────
+
+model Outfit {
+  id             String    @id @default(uuid())
+  market_id      String
+  name           String
+  description    String
+  price          Float
+  currency       String    @default("USD")
+  images         Json?     // 2D image URLs stored as JSON array
+  has_3d_model   Boolean   @default(false)
+  skm_asset_key  String?   // e.g. "outfit_zara_tshirt_01" — sent to UE
+  tags           Json?     // ["formal","wedding","fancy"] stored as JSON array
+  occasion       String?   // "wedding", "casual", "sport"
+  style_type     String?   // "classic", "streetwear", "luxury"
+  in_stock       Boolean   @default(true)
+  created_at     DateTime  @default(now())
+
+  market         Market    @relation(fields: [market_id], references: [id])
+  wardrobe_items WardrobeItem[]
+  order_items    OrderItem[]
+
+  @@map("outfits")
+}
+
+// ─── Wardrobe ─────────────────────────────────────────────────────────────────
+
+model WardrobeItem {
+  id         String   @id @default(uuid())
+  user_id    String
+  outfit_id  String
+  is_public  Boolean  @default(true)
+  added_at   DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id])
+  outfit     Outfit   @relation(fields: [outfit_id], references: [id])
+
+  @@unique([user_id, outfit_id])
+  @@map("wardrobe_items")
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+model Order {
+  id              String      @id @default(uuid())
+  user_id         String
+  referrer_id     String?     // wardrobe owner who gets commission
+  status          OrderStatus @default(PENDING)
+  total_amount    Float
+  commission_rate Float       @default(0.1)  // 10% to referrer
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  user            User        @relation(fields: [user_id], references: [id])
+  referrer        User?       @relation("Referrer", fields: [referrer_id], references: [id])
+  items           OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  order_id  String
+  outfit_id String
+  quantity  Int     @default(1)
+  price     Float
+
+  order     Order   @relation(fields: [order_id], references: [id])
+  outfit    Outfit  @relation(fields: [outfit_id], references: [id])
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// ─── Transactions ─────────────────────────────────────────────────────────────
+
+model Transaction {
+  id          String            @id @default(uuid())
+  user_id     String
+  type        TransactionType
+  amount      Float
+  currency    String            @default("USD")
+  description String
+  status      TransactionStatus @default(COMPLETED)
+  created_at  DateTime          @default(now())
+
+  user        User              @relation(fields: [user_id], references: [id])
+
+  @@map("transactions")
+}
+
+enum TransactionType {
+  COMMISSION
+  PAYOUT
+  PURCHASE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
